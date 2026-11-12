@@ -1,0 +1,57 @@
+# Python Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# SQLite Database Files
+*.db
+*.sqlite
+*.sqlite3
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & Editor configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+# Browser automation profiles
+chrome_profile_*/
+
+# Browser automation artifacts
+playwright-report/
+test-results/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Logs
+*.log
+
+# Temporary debugging scripts and screenshots
+scripts/
+screenshots/
+

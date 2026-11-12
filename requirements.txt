@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+httpx
+pytest
+sqlalchemy>=2.0.0
+streamlit>=1.30.0
+streamlit-monaco>=0.1.3
