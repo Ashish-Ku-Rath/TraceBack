@@ -283,12 +283,26 @@ In Milestone 4 (Day 4), TraceBack implements a complete frontend client using St
 
 ---
 
-## 8. Future Milestones (Days 5–10)
+## 8. MVP Architectural Components (Days 5 & 6)
 
-- **Day 5 — Code Editor & Execution Lab**: Monaco Editor, live custom test execution UI, and terminal output streaming.
-- **Day 6 — AI Diagnostics & AST Analysis**: Google Gemini API integration and Python AST reasoning for explaining runtime errors and failed test invariants.
-- **Day 7 — Problem Submissions & Hidden Judges**: `POST /execute/submit`, hidden evaluation database, and verdict history.
-- **Day 8 — Analytics & User Mastery**: User profiles, mastery radar charts, and solving streaks.
+### A. Monaco Editor Zero-Rerun Architecture
+- **Root Cause of Prior Instability**: The standard `streamlit-monaco` package hardcoded continuous debounced `setComponentValue(e)` calls on every keystroke (`onChange`). Because Streamlit reruns the Python script upon receiving component value updates, typing triggered continuous full app reruns, black screen flickering, and cursor reset to the end of the text.
+- **TraceBack Solution**:
+  1. Replaced with uncontrolled editor model (`defaultValue: o.value`), so Streamlit parent rerenders do not alter the client model or move the cursor.
+  2. Removed automatic keystroke and blur event dispatches to Python.
+  3. Installed event-driven synchronization: capture-phase click listeners on the parent window for `▶ Run Code`, `Submit`, and `💾 Save Draft`, alongside a Monaco command for `Ctrl+S`.
+  4. Result: 0 Streamlit reruns during active typing; seamless and deterministic state synchronization on user action.
+
+### B. Problem Submission & Automated Judge (`POST /execute/submit`)
+- Queries test cases (`ProblemExample`) from SQLite database.
+- Dispatches code and test suites to the configured `ExecutionProvider` (`OnlineCompilerProvider` or `MockProvider`).
+- Evaluates test outcomes, computes execution times, and aggregates results into normalized verdicts: `ACCEPTED`, `WRONG_ANSWER`, or `RUNTIME_ERROR`.
+
+### C. Google Gemini AI Debugging Assistant (`POST /ai/debug`)
+- Diagnostic AI assistant service (`backend/services/ai_debug_service.py`).
+- Inspects code, error message, stdin, stdout, and stderr.
+- Pinpoints root cause, explains the algorithmic failure, identifies the faulty lines, and provides a surgical code fix.
+- Gracefully handles unconfigured `GEMINI_API_KEY` by returning clear configuration instructions without crashing the app.
 
 ---
 
@@ -297,13 +311,13 @@ In Milestone 4 (Day 4), TraceBack implements a complete frontend client using St
 ### 1. Starting the FastAPI Backend
 ```powershell
 .\.venv\Scripts\Activate.ps1
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn backend.main:app --port 8000
 ```
 
 ### 2. Starting the Streamlit Frontend
 ```powershell
 .\.venv\Scripts\Activate.ps1
-python -m streamlit run frontend/app.py --server.address 127.0.0.1 --server.port 8501
+python -m streamlit run frontend/app.py --server.port 8501
 ```
 
 ### 3. Seeding Initial Problems
@@ -315,9 +329,11 @@ python -m database.seed
 ### 4. Running the Automated Test Suite
 ```powershell
 .\.venv\Scripts\Activate.ps1
-pytest -v
+python -m pytest -v
 ```
-All 51 automated tests run deterministically offline without network calls:
-- 26 execution and core API tests using `httpx.MockTransport`.
+All 72 automated tests run deterministically offline without external network dependency:
+- 28 execution and judging tests using `httpx.MockTransport` and DB fixtures.
 - 16 problem management tests using isolated in-memory SQLite (`sqlite:///:memory:`).
-- 9 frontend API client unit tests verifying query construction, error handling, and stats calculation.
+- 11 frontend API client unit tests verifying query construction, error handling, submit client, and AI debug client.
+- 13 frontend workspace tests verifying Monaco configuration, session state caching, templates, and execution state.
+- 4 AI Debugging Assistant tests verifying error diagnosis schemas, simulated fallbacks, and unconfigured states.

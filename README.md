@@ -1,490 +1,359 @@
-# TraceBack — The Intelligent Coding & Debugging Assistant
+# TraceBack
+
+> **An Intelligent Coding, Execution and AI-Powered Debugging Platform.**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.162.0-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.42%2B-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Python](https://img.shields.io/badge/Python-3.14%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/Tests-51%20Passed-brightgreen.svg)](#12-running-tests)
-[![Architecture: Pluggable Providers](https://img.shields.io/badge/Architecture-Pluggable%20Execution-blue.svg)](#4-execution-architecture)
-[![Database: SQLite & SQLAlchemy](https://img.shields.io/badge/Database-SQLite%20%7C%20SQLAlchemy%202.x-lightgrey.svg)](#6-problem-management--database-architecture)
-[![Frontend: Streamlit](https://img.shields.io/badge/Frontend-Streamlit%201.66%2B-red.svg)](#9-frontend-architecture--design-system)
+[![Tests](https://img.shields.io/badge/Tests-74%20Passed-brightgreen.svg)](#9-automated-testing)
+[![Code Editor](https://img.shields.io/badge/Editor-Monaco-blue.svg)](https://microsoft.github.io/monaco-editor/)
+[![AI Engine](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2.svg?logo=google&logoColor=white)](https://aistudio.google.com/)
+[![Remote Judge](https://img.shields.io/badge/Execution-OnlineCompiler.io-0284C7.svg)](#5-execution-engine--providers)
+[![Database](https://img.shields.io/badge/Database-SQLite%20%7C%20SQLAlchemy%202.x-lightgrey.svg)](#6-database-architecture)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-TraceBack is a next-generation LeetCode-style competitive programming and learning platform that bridges the gap between running test cases and understanding code failures. Rather than leaving developers staring at generic errors or opaque test outputs, TraceBack pairs an automated code judge with an intelligent AI debugging assistant powered by Google Gemini and Python AST analysis.
+---
+
+## 1. Project Overview
+
+**TraceBack** is an intelligent coding platform designed to bridge the gap between running automated test cases and understanding why code fails. Traditional online judges inform students **what** happened (`Wrong Answer`, `Runtime Error`, `Time Limit Exceeded`), but leave them stranded when deciphering **why** their algorithmic logic broke or which boundary condition failed.
+
+TraceBack couples a responsive, split-screen coding workspace with an automated test runner and an **AI Debug Mentor** powered by Google Gemini. Rather than simply revealing solutions, TraceBack provides Socratic guidance, algorithm walk-throughs, bug isolation, and code fixes tailored to the student's exact source code.
 
 ---
 
-## 1. The Problem TraceBack Solves
+## 2. Key Features
 
-Traditional online judges tell you **what** failed:
-- `Wrong Answer` (expected `[0, 1]`, got `[1, 2]`)
-- `Runtime Error` (`IndexError: list index out of range`)
-- `Time Limit Exceeded`
+### 💻 Interactive Monaco Code Editor
+- In-browser VS Code Monaco editor running in an **uncontrolled client-side model**.
+- **Blank by Default**: Every problem opens with a completely empty editor so students write solutions from scratch.
+- **Zero-Rerun Stability**: Custom event-driven synchronization (`Ctrl+S`, action buttons) prevents cursor jumping and intermediate Streamlit re-renders while typing.
+- Persistent drafts cached per problem across navigation and normal page refreshes.
 
-However, they rarely tell you **why** your logic broke, which edge case was missed, or how your algorithm's invariant failed without giving away the full answer immediately.
+### 🐍 Complete Program Mode Execution
+- Formatted for competitive programming standards (Codeforces / CodeChef / HackerRank style):
+  - Standard input read via `sys.stdin` or `input()`.
+  - Standard output produced via `print()`.
+- Eliminates brittle boilerplate wrapper classes.
 
-**TraceBack solves this by:**
-1. Isolating failure modes with precise test harnesses.
-2. Providing a sandboxed, provider-independent execution layer.
-3. Inspecting runtime call stacks and AST representations.
-4. Leveraging LLM-driven diagnostic reasoning (Gemini API in later milestones) to deliver Socratic, actionable debugging guidance.
+### ⚡ Dual Execution Provider System
+- **OnlineCompiler Provider**: Real remote sandboxed execution in the cloud via the official OnlineCompiler.io REST API.
+- **Mock Provider (Offline Development)**: Safe, deterministic simulation engine that never executes untrusted code locally (`is_simulated=True`), guaranteeing host security during development and testing.
 
----
+### 📚 Problem Library (23 Programming Problems)
+- **23 curated problems** covering essential data structures and algorithms across **Easy** and **Medium** tiers:
+  - **Array & Strings**: Two Sum, Reverse String, Valid Parentheses, Palindrome String, Second Largest Distinct Element, Missing Number in an Array, Count Vowels and Consonants.
+  - **Math & Number Theory**: Fibonacci Series, Armstrong Number, Palindrome Number, Prime Number, Factorial, Reverse a Number, Sum of Digits, Count Digits, GCD, LCM, Even or Odd, Leap Year, Multiplication Table, Perfect Number, Strong Number, Decimal to Binary.
+- Dynamic filtering by difficulty, topic tags (`Array`, `Math`, `String`, `Basic Programming`), and real-time title search.
 
-## 2. Planned Features
+### ⚖️ Automated Submission & Test Judging
+- Evaluates code against multiple hidden and public test cases stored in SQLite.
+- Computes execution time, memory usage, exit code, stdout, and stderr.
+- Delivers clear verdicts: `ACCEPTED`, `WRONG_ANSWER`, or `RUNTIME_ERROR`, complete with per-testcase input/expected/actual comparisons.
 
-- **Problem Catalog & DSA Categorization**: Curated collection of DSA problems with difficulty grading and hidden edge test suites.
-- **Monaco Code Editor Integration**: Full-featured in-browser code editor with syntax highlighting, auto-complete, and indentation *(Planned)*.
-- **Sandboxed Execution Architecture**: Pluggable architecture supporting:
-  - **Mock Provider**: Fast, safe, offline development simulation with labeled responses (`is_simulated=True`).
-  - **OnlineCompiler Provider**: Real remote sandboxed execution via the official OnlineCompiler.io REST API.
-- **Custom Test Lab**: Interactive test case validation where users can supply custom inputs and compare actual vs. expected outputs.
-- **AI-Powered Debugging Assistant (Gemini)**: Context-aware explanations detailing why submitted code failed *(Planned)*.
-- **AST Static Code Analysis**: Pre-execution syntax validation, anti-pattern detection, and algorithmic complexity hints *(Planned)*.
+### 🔬 Custom Test Lab
+- Interactive multi-testcase sandbox enabling developers to supply multiple custom input/expected-output pairs simultaneously.
+
+### 🤖 Gemini-Powered AI Debug Mentor
+- Integrated with the **Google Gemini API** (`POST /ai/debug`), featuring **five specialized assistance modes**:
+  1. **Explain Error (`explain_error`)**: Translates complex runtime tracebacks (e.g. `IndexError`, `ZeroDivisionError`) into plain English explanations.
+  2. **Find the Bug (`find_bug`)**: Pinpoints the exact faulty statement, explains why it fails, and identifies the underlying misconception.
+  3. **Explain Algorithm (`explain_algorithm`)**: Explains optimal algorithmic intuition, step-by-step approach, time complexity ($O$), and space complexity ($O$).
+  4. **Give Me a Hint (`hint`)**: Socratic tutor mode providing incremental conceptual clues without spoiling the solution.
+  5. **Show Corrected Code (`corrected_code`)**: Delivers a clean, verified replacement Python 3 program with an explanation of surgical corrections.
+- **Resilient Fallback**: Gracefully detects missing or unconfigured `GEMINI_API_KEY` credentials and provides actionable instructions without crashing the application.
 
 ---
 
 ## 3. Technology Stack
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Language** | Python 3.14+ | Primary backend and analysis language |
-| **Backend API** | FastAPI | High-performance asynchronous REST API |
-| **ASGI Server** | Uvicorn (standard) | Fast ASGI server with uvloop and websockets |
-| **Validation** | Pydantic v2 | Robust request/response schema modeling, size limits, and byte checks |
-| **Configuration** | python-dotenv | Secure environment variable handling |
-| **HTTP Client** | HTTPX | Asynchronous HTTP client for OnlineCompiler REST API |
-| **Database** | SQLite 3 | Lightweight, zero-config relational storage for DSA problems |
-| **ORM** | SQLAlchemy 2.x | Declarative data modeling, relations, connection pooling, and migrations |
-| **Testing** | Pytest & FastAPI TestClient | Automated test suite with MockTransport & in-memory SQLite (51 tests) |
-| **Execution** | Pluggable Providers | Abstract interface decoupling API from execution backends |
-| **Remote Judge** | OnlineCompiler.io | Remote sandboxed code execution engine |
-| **Frontend** | Streamlit 1.66+ | Professional dark-theme interactive UI with custom CSS |
-| **AI Debugger** | Google Gemini API *(Planned)* | Diagnostic debugging reasoning engine |
-
----
-
-## 4. Execution Architecture
-
-TraceBack decouples endpoint routing from code execution through an abstract provider pattern:
-
-```text
-                     +----------------------------+
-                     |    FastAPI Routes Layer    |
-                     |  /execute/run              |
-                     |  /execute/check-custom-tests|
-                     +--------------+-------------+
-                                    |
-                                    v
-                     +----------------------------+
-                     |      ExecutionService      |
-                     +--------------+-------------+
-                                    |
-                                    v
-                     +----------------------------+
-                     |      ProviderFactory       |
-                     +--------------+-------------+
-                                    |
-            +-----------------------+-----------------------+
-            |                                               |
-            v                                               v
-+------------------------+                     +---------------------------+
-|      MockProvider      |                     |  OnlineCompilerProvider   |
-| (Offline Development)  |                     |  (Remote Cloud Sandbox)   |
-| - Never executes code  |                     | - HTTPX AsyncClient       |
-| - is_simulated: True   |                     | - Raw Authorization header|
-| - Deterministic mocks  |                     | - Normalized verdicts     |
-+------------------------+                     +---------------------------+
-```
-
-### Provider Interface
-All execution providers inherit from `BaseExecutionProvider` and implement two asynchronous methods:
-1. `run_code(request: RunCodeRequest) -> RunCodeResponse`: Executes source code with custom standard input and captures stdout/stderr.
-2. `run_tests(request: CustomTestCheckRequest) -> CustomTestCheckResponse`: Evaluates code against multiple test cases and returns verdicts.
-
-### Mock Provider (Default)
-> [!IMPORTANT]
-> **MockProvider NEVER executes submitted source code locally.** It avoids `exec()`, `eval()`, and local `subprocess` calls completely. It returns deterministic synthetic responses explicitly flagged with `"is_simulated": true` to protect host security and prevent accidental interpretation of simulated results as real execution.
-
-### OnlineCompiler Provider
-- Connects directly to the official OnlineCompiler.io REST API (`https://api.onlinecompiler.io`).
-- Communicates via `POST /api/run-code-sync/` and `POST /api/run-tests/`.
-- Authenticates using the raw API key passed in the `Authorization` header (`Authorization: <api_key>`).
-- Normalizes provider responses into canonical TraceBack schemas (`accepted`, `wrong_answer`, `runtime_error`, `compilation_error`, `time_limit_exceeded`, etc.).
-
----
-
-## 5. Security & Isolation Mandates
-
-1. **Host Isolation**: Zero local execution of user-submitted source code. No `exec()`, `eval()`, or local subprocess calls.
-2. **Credential Protection**:
-   - `ONLINECOMPILER_API_KEY` is loaded strictly from environment variables.
-   - Authorization headers and API keys are never printed in logs or included in exception messages.
-   - `.env` is tracked in `.gitignore` and never committed.
-3. **Payload & Size Limits**:
-   - Source code: Max 100 KB UTF-8 encoded bytes.
-   - Standard input: Max 100 KB UTF-8 encoded bytes.
-   - Expected output per test: Max 64 KB UTF-8 encoded bytes.
-   - Max custom tests per request: 8.
-   - Execution time: 1 to 30 seconds (default 5s).
-   - Rejection of NUL (`\x00`) characters to prevent memory-level injection vulnerabilities.
-4. **Deterministic Testing**: All automated test cases use `httpx.MockTransport`. No real external API calls or quota consumption occur during pytest.
-
----
-
-## 6. Problem Management & Database Architecture
-
-TraceBack stores and categorizes Data Structures & Algorithms (DSA) problems using SQLite and SQLAlchemy 2.x with synchronous sessions.
-
-```text
-+------------------------------------+             +------------------------------------+
-|              problems              |             |          problem_examples          |
-+------------------------------------+             +------------------------------------+
-| id          : INTEGER (PK, auto)   |<----------->| id          : INTEGER (PK, auto)   |
-| title       : VARCHAR(255)         |   1     N   | problem_id  : INTEGER (FK, cascade)|
-| slug        : VARCHAR(255) (UNIQUE)|             | input       : TEXT                 |
-| description : TEXT                 |             | expected_out: TEXT                 |
-| difficulty  : VARCHAR(50) (INDEX)  |             | explanation : TEXT (nullable)      |
-| constraints : TEXT                 |             +------------------------------------+
-| tags        : JSON                 |
-| created_at  : DATETIME             |
-| updated_at  : DATETIME             |
-+------------------------------------+
-```
-
-### Problem Entities
-1. **Problem (`problems` table)**:
-   - `id`: Auto-incrementing primary key.
-   - `title`: Problem title (e.g., "Two Sum").
-   - `slug`: Unique, URL-safe slug identifier (e.g., "two-sum").
-   - `description`: Full markdown-formatted problem statement.
-   - `difficulty`: Normalized rating: `Easy`, `Medium`, or `Hard`.
-   - `constraints`: Specific runtime bounds and input limitations.
-   - `tags`: JSON array of topic categories (e.g. `["Array", "Hash Map"]`).
-   - `created_at` / `updated_at`: UTC timestamps.
-2. **ProblemExample (`problem_examples` table)**:
-   - Public sample test cases displayed in UI descriptions to illustrate problem behavior.
-   - *Security Note*: These are sample examples only, distinct from future official hidden evaluation suites.
-   - Linked via 1-to-many relationship with cascading delete (`ondelete="CASCADE"`).
-
----
-
-## 7. Problem Management API Endpoints
-
-| Method | Endpoint | Description | Status Code |
+| Layer | Technology | Version | Purpose |
 |---|---|---|---|
-| `POST` | `/problems` | Create new problem with statement and sample examples | `201 Created` |
-| `GET` | `/problems` | Retrieve paginated problem summaries with filtering and search | `200 OK` |
-| `GET` | `/problems/{problem_id}` | Retrieve individual problem details and public examples | `200 OK` / `404` |
-| `GET` | `/problems/slug/{slug}` | Retrieve individual problem details by unique slug | `200 OK` / `404` |
-
-### Endpoint Filtering & Pagination Parameters (`GET /problems`)
-- `skip`: Records to skip (default `0`, minimum `0`).
-- `limit`: Records to return (default `10`, range `1-100`).
-- `difficulty`: Filter by difficulty (`Easy`, `Medium`, `Hard`).
-- `tag`: Filter by topic tag (case-insensitive substring match).
-- `search`: Filter by keyword in problem title.
-- Response header `X-Total-Count`: Contains the total number of records matching the query before pagination.
+| **Language** | Python | `3.14+` | Core backend runtime and analysis engine |
+| **Backend API** | FastAPI | `0.162.0` | Asynchronous REST API framework |
+| **ASGI Server** | Uvicorn | Standard | High-performance ASGI server |
+| **Frontend UI** | Streamlit | `1.42+` | Dark-themed, reactive web interface |
+| **Code Editor** | Monaco Editor | Custom Build | VS Code Monaco editor with event sync |
+| **Database** | SQLite 3 | Embedded | Lightweight relational database |
+| **ORM** | SQLAlchemy | `2.x` | Declarative models, connections & migrations |
+| **Data Validation** | Pydantic | `v2` | Strict payload schema validation and size bounds |
+| **HTTP Client** | HTTPX | Latest | Asynchronous client for external REST APIs |
+| **AI Integration** | Google Gemini API | REST / v1beta | Diagnostic reasoning and Socratic hints |
+| **Remote Judge** | OnlineCompiler.io | REST API | Cloud sandboxed Python code runner |
+| **Testing** | Pytest | `9.2+` | Deterministic automated unit and integration tests |
 
 ---
 
-## 8. Database Initialization & Idempotent Seeding
+## 4. Project Architecture
 
-### Automatic Initialization
-When starting the FastAPI backend, the lifespan context manager automatically calls `init_db()` to ensure all required tables exist safely without deleting existing data.
+TraceBack maintains strict separation of concerns across a clean three-tier architecture:
 
-### Manual Seeding via CLI
-TraceBack includes an idempotent seeding command that inserts 3 classic DSA problems with original descriptions and multiple public examples:
-1. **Two Sum** (Easy — Array, Hash Map)
-2. **Reverse String** (Easy — String, Two Pointers)
-3. **Valid Parentheses** (Medium — String, Stack)
-
-To run or re-run the seed script:
-```powershell
-.\.venv\Scripts\Activate.ps1
-python -m database.seed
+```text
+                      +-----------------------------+
+                      |     Streamlit Frontend      |
+                      |   (Port 8501 - app.py)      |
+                      +--------------+--------------+
+                                     |
+                                HTTP | (BackendAPIClient via HTTPX)
+                                     v
+                      +-----------------------------+
+                      |       FastAPI Backend       |
+                      |  (Port 8000 - backend/main) |
+                      +--------------+--------------+
+                                     |
+        +----------------------------+----------------------------+
+        |                            |                            |
+        v                            v                            v
++---------------+            +---------------+            +---------------+
+| /problems     |            | /execute      |            | /ai/debug     |
+| ProblemService|            |ExecutionServic|            |AIDebugService |
++-------+-------+            +-------+-------+            +-------+-------+
+        |                            |                            |
+        v                            v                            v
++---------------+            +---------------+            +---------------+
+|  SQLite DB    |            |ProviderFactory|            | Google Gemini |
+|  traceback.db |            +-------+-------+            | REST API      |
++---------------+                    |                    +---------------+
+                           +---------+---------+
+                           |                   |
+                           v                   v
+                    +--------------+   +---------------+
+                    | MockProvider |   |OnlineCompiler |
+                    | (Simulation) |   | (Cloud Judge) |
+                    +--------------+   +---------------+
 ```
-*Idempotency Guarantee*: Running the seeding script multiple times will safely detect existing slugs and skip them without duplicating records or wiping the database.
+
+### Component Responsibilities
+- **`frontend/`**: Streamlit presentation layer. Injects custom dark CSS, handles navigation state, embeds Monaco, and communicates with the backend via `BackendAPIClient`.
+- **`backend/routes/`**: FastAPI route controllers validating inputs and returning canonical response schemas (`/execute`, `/problems`, `/ai`).
+- **`backend/services/`**: Core business domain logic, orchestrating problem queries, remote execution dispatch, and AI prompt engineering.
+- **`backend/services/providers/`**: Pluggable code execution system implementing `BaseExecutionProvider`.
+- **`database/`**: SQLAlchemy SQLite connection pooling, declarative models (`Problem`, `ProblemExample`), and idempotent database seeding.
 
 ---
 
-## 9. Frontend Architecture & Design System (Day 4)
-
-TraceBack delivers an authentic coding-platform web experience built on Streamlit with a bespoke CSS design system inspired by Linear's dark aesthetics and LeetCode's workflow clarity.
-
-### Brand Identity
-- **Logo**: `</TraceBack>`
-  - `</` rendered in electric purple (`#8B5CF6`).
-  - `Trace` rendered in crisp white (`#F8FAFC`).
-  - `Back` rendered in light purple (`#C084FC`).
-- **Tagline**: *The Intelligent Coding & Debugging Assistant*
-
-### Design System Color Palette
-The UI follows an 80% black/charcoal, 15% dark navy, and 5% accent palette:
-
-| Element | Hex Code | Purpose |
-|---|---|---|
-| **Main Background** | `#080B12` | Primary page canvas |
-| **Sidebar Background** | `#0D111B` | Navigation sidebar background |
-| **Card Background** | `#131A27` | Primary card containers |
-| **Secondary Card** | `#192235` | Nested example boxes & metrics |
-| **Primary Accent** | `#8B5CF6` | Action buttons, active navigation, logo accent |
-| **Secondary Accent** | `#3B82F6` | Informational highlights |
-| **Main Text** | `#F8FAFC` | Headings, primary labels |
-| **Secondary Text** | `#94A3B8` | Subtitles, metadata descriptions |
-| **Borders** | `#273449` | Restrained card & separator outlines |
-| **Success** | `#22C55E` | Easy difficulty badge, online indicator |
-| **Warning** | `#F59E0B` | Medium difficulty badge, constraints header |
-| **Error** | `#EF4444` | Hard difficulty badge, offline indicator |
-
-### Key Frontend Views
-1. **Dashboard (`frontend/pages/dashboard.py`)**:
-   - Welcome Hero banner with direct exploration action.
-   - Real-time KPI statistics cards powered directly by the FastAPI backend (Total, Easy, Medium, Hard problems).
-   - Recommended problems list with colored difficulty badges, topic tags, and quick-solve buttons.
-   - Polished empty state for recent submissions activity.
-   - 4-step algorithmic problem-solving walkthrough.
-2. **Problem Library (`frontend/pages/problems.py`)**:
-   - Interactive search bar querying `GET /problems?search=<term>`.
-   - Difficulty dropdown filter (`All`, `Easy`, `Medium`, `Hard`).
-   - Category topic tag filter (`Array`, `Hash Map`, `String`, `Stack`, `Two Pointers`).
-   - Clean problems table with difficulty badges, tag pills, and "Solve" buttons.
-3. **Problem Details (`frontend/pages/problem_detail.py`)**:
-   - Full problem statement with formatted markdown and code blocks.
-   - Algorithmic bounds and constraints checklist.
-   - Structured public sample test cases (Input, Expected Output, Explanation).
-   - "Back to Problems" navigation and Day 5 Workspace integration button.
-4. **Navigation & Status**:
-   - Fixed-looking sidebar with active page highlight.
-   - Real-time backend status pill (live pulsing green dot when FastAPI is running; red when offline with actionable troubleshooting instructions).
-
----
-
-## 10. Project Directory Structure
+## 5. Directory Structure
 
 ```text
 TraceBack/
-├── frontend/                   # Frontend presentation layer (Streamlit 1.66+)
-│   ├── app.py                  # Streamlit application entrypoint & routing
-│   ├── api_client.py           # Reusable BackendAPIClient (HTTPX)
-│   ├── config.py               # Theme constants, brand logo, and URLs
-│   ├── styles.py               # Custom CSS design system injection
-│   ├── components/             # Reusable UI widgets
-│   │   ├── __init__.py         # Component exports
-│   │   ├── sidebar.py          # Brand logo & navigation sidebar
-│   │   ├── header.py           # Top navigation bar & live health indicator
-│   │   ├── cards.py            # Stat cards, hero banner, getting-started
-│   │   └── problem_card.py     # Difficulty badges, tags, and problem items
-│   └── pages/                  # Route view controllers
-│       ├── __init__.py         # Page exports
-│       ├── dashboard.py        # Main platform dashboard
-│       ├── problems.py         # Problem Library with search & filters
-│       ├── problem_detail.py   # Full problem statement & sample examples
-│       └── coming_soon.py      # Polished preview for future milestones
-│
-├── backend/                    # Core application backend (FastAPI)
-│   ├── core/                   # Application settings, exceptions, and configuration
-│   │   ├── config.py           # Centralized settings, DB URL & bounds
-│   │   └── exceptions.py       # Domain exceptions (Configuration, DuplicateSlug, NotFound)
-│   ├── integrations/           # External service clients
-│   │   └── onlinecompiler_client.py # Async HTTP client for OnlineCompiler.io
-│   ├── models/                 # SQLAlchemy 2.x declarative ORM models
-│   │   ├── __init__.py         # Re-export Problem and ProblemExample
-│   │   └── problem.py          # Problem and ProblemExample table definitions
-│   ├── routes/                 # API route handlers & endpoints
-│   │   ├── execution.py        # /execute/run and /execute/check-custom-tests
-│   │   └── problems.py         # /problems endpoints (CRUD, filters, pagination)
-│   ├── schemas/                # Pydantic request/response schemas
-│   │   ├── execution.py        # Execution payload schemas & validators
-│   │   ├── problem.py          # Problem create, detail, and summary schemas
-│   │   └── system.py           # System & health schemas
-│   ├── services/               # Business logic orchestration
-│   │   ├── execution_service.py # Decoupled execution orchestrator
-│   │   ├── problem_service.py   # Problem query, pagination, and creation logic
-│   │   └── providers/          # Pluggable execution providers
-│   │       ├── base_provider.py           # Abstract execution provider ABC
-│   │       ├── mock_provider.py           # Safe simulated execution provider
-│   │       ├── onlinecompiler_provider.py # Real remote execution provider
-│   │       └── provider_factory.py        # Provider resolution factory
-│   └── main.py                 # FastAPI application instance, lifespan & routing
-│
-├── database/                   # Database engine, connection, base, and seeding
-│   ├── base.py                 # DeclarativeBase base class
-│   ├── connection.py           # Engine, sessionmaker, get_db dependency, init_db
-│   └── seed.py                 # Idempotent problem seeding script
-│
-├── tests/                      # Automated test suite (Pytest & TestClient - 51 tests)
-│   ├── test_execution_api.py   # FastAPI endpoint integration & boundary tests
-│   ├── test_frontend_api_client.py # Frontend HTTPX API client unit tests
-│   ├── test_main.py            # Core health & system tests
-│   ├── test_mock_provider.py   # Mock provider simulation & safety tests
-│   ├── test_onlinecompiler_provider.py # OnlineCompiler client & normalization tests
-│   └── test_problems_api.py    # Problem management, filtering, and seeding tests
-│
-├── .env.example                # Template for required environment variables
-├── .gitignore                  # Git exclusion rules (ignores *.db and .env)
-├── requirements.txt            # Python package dependencies
+├── .env.example                # Environment configuration template
+├── .gitignore                  # Git exclusion rules (ignores secrets & databases)
+├── LICENSE                     # MIT License
+├── PROJECT_NOTES.md            # Technical engineering decisions & history
 ├── README.md                   # Comprehensive project documentation
-└── PROJECT_NOTES.md            # Architectural decisions and technical notes
+├── requirements.txt            # Python dependencies
+│
+├── backend/                    # Core FastAPI backend application
+│   ├── main.py                 # FastAPI application instance, lifespan & router mounting
+│   ├── core/                   # Central configuration & domain exceptions
+│   │   ├── config.py           # Pydantic/dotenv settings & bounds
+│   │   └── exceptions.py       # Domain exceptions (Configuration, NotFound, Duplicate)
+│   ├── integrations/           # External service clients
+│   │   └── onlinecompiler_client.py # HTTPX client for OnlineCompiler.io
+│   ├── models/                 # SQLAlchemy 2.x declarative ORM models
+│   │   ├── __init__.py         # Model exports
+│   │   └── problem.py          # Problem & ProblemExample table definitions
+│   ├── routes/                 # REST API endpoints
+│   │   ├── ai_debug.py         # POST /ai/debug endpoint
+│   │   ├── execution.py        # POST /execute/run and /execute/submit
+│   │   └── problems.py         # GET/POST /problems endpoints
+│   ├── schemas/                # Pydantic request & response contracts
+│   │   ├── ai_debug.py         # AIDebugRequest & AIDebugResponse
+│   │   ├── execution.py        # Execution & submission schemas
+│   │   ├── problem.py          # Problem create, detail, and summary schemas
+│   │   └── system.py           # Health and root response schemas
+│   └── services/               # Domain business logic
+│       ├── ai_debug_service.py # Gemini prompt orchestration & fallbacks
+│       ├── execution_service.py# Submission evaluation & runner orchestration
+│       ├── problem_service.py  # Problem querying, pagination & search
+│       └── providers/          # Pluggable execution providers
+│           ├── base_provider.py# Abstract execution provider interface
+│           ├── mock_provider.py# Safe offline simulation provider
+│           ├── onlinecompiler_provider.py # Remote execution provider
+│           └── provider_factory.py        # Provider resolution factory
+│
+├── database/                   # SQLite database engine & seed scripts
+│   ├── base.py                 # DeclarativeBase foundation
+│   ├── connection.py           # SessionLocal, engine, and init_db
+│   └── seed.py                 # Idempotent 23-problem seed generator
+│
+├── frontend/                   # Streamlit user interface
+│   ├── app.py                  # Streamlit entrypoint and page router
+│   ├── api_client.py           # HTTPX backend API client
+│   ├── config.py               # Theme constants & API URLs
+│   ├── starter_templates.py    # Blank editor configuration & template migration
+│   ├── styles.py               # Dark design system CSS injection
+│   ├── components/             # Reusable UI components
+│   │   ├── cards.py            # Dashboard metric cards & alert banners
+│   │   ├── header.py           # Top navigation bar & live health dot
+│   │   ├── monaco_editor.py    # Monaco custom component wrapper
+│   │   ├── problem_card.py     # Problem row pills & difficulty badges
+│   │   ├── sidebar.py          # Brand logo & navigation menu
+│   │   └── monaco_build/       # Bundled Monaco React/JS artifacts
+│   └── pages/                  # Main platform views
+│       ├── coming_soon.py      # Placeholder for future roadmap features
+│       ├── dashboard.py        # Analytics, KPI metrics & problem suggestions
+│       ├── problem_detail.py   # Problem specifications & examples view
+│       ├── problems.py         # Problem Library table with search & filters
+│       └── workspace.py        # Split-screen coding workspace & AI drawer
+│
+└── tests/                      # Automated test suite (74 tests)
+    ├── test_ai_debug_api.py    # AI assistant endpoint & schema validation tests
+    ├── test_execution_api.py   # Run Code & Submit endpoint integration tests
+    ├── test_frontend_api_client.py # Frontend HTTP client unit tests
+    ├── test_frontend_workspace.py  # Workspace state, blank editor & draft tests
+    ├── test_main.py            # API health & system route tests
+    ├── test_mock_provider.py   # Mock execution provider safety tests
+    ├── test_onlinecompiler_provider.py # OnlineCompiler integration tests
+    └── test_problems_api.py    # Problem management, filtering & seeding tests
 ```
 
 ---
 
-## 11. Installation & Running Instructions
+## 6. Installation & Setup
 
 ### Prerequisites
-- Python 3.10+ (Python 3.14 recommended)
+- Python 3.10 or higher (Python 3.14 recommended)
 - Git
 
-### Step 1: Clone Repository & Create Virtual Environment
+### Step 1: Clone the Repository
 On **Windows (PowerShell)**:
+```powershell
+git clone https://github.com/Ashish-Ku-Rath/TraceBack.git
+cd TraceBack
+```
+
+### Step 2: Create and Activate Virtual Environment
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-### Step 2: Install Dependencies
+### Step 3: Install Dependencies
 ```powershell
 pip install -r requirements.txt
 ```
 
-### Step 3: Configure Environment
-Create `.env` from template:
+---
+
+## 7. Environment Configuration
+
+TraceBack reads its configuration from a root `.env` file. A template `.env.example` is included in the repository.
+
+### Create Your `.env` File
 ```powershell
 Copy-Item .env.example .env
 ```
 
-### Step 4: Seed Database
+### Environment Variables Reference
+
+| Variable | Default Value | Description |
+|---|---|---|
+| `EXECUTION_PROVIDER` | `mock` | `mock` for safe local simulation; `onlinecompiler` for real remote cloud execution. |
+| `DATABASE_URL` | `sqlite:///./database/traceback.db` | SQLite database connection string. |
+| `ONLINECOMPILER_API_URL` | `https://api.onlinecompiler.io` | REST endpoint for OnlineCompiler API. |
+| `ONLINECOMPILER_API_KEY` | *(empty)* | API key for OnlineCompiler.io (required only if provider is `onlinecompiler`). |
+| `ONLINECOMPILER_PYTHON_COMPILER` | `python-3.14` | Target Python compiler version for remote execution. |
+| `ONLINECOMPILER_MAX_TESTS_PER_REQUEST` | `8` | Maximum custom tests evaluated per request. |
+| `ONLINECOMPILER_DEFAULT_TIME_LIMIT` | `5` | Remote execution timeout in seconds. |
+| `GEMINI_API_KEY` | *(empty)* | Google Gemini API key for AI Debug Assistant. |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Gemini model name (`gemini-3.8-flash`, `gemini-2.5-flash`, etc.). |
+| `GEMINI_TIMEOUT_SECONDS` | `30` | Network timeout for Gemini AI requests. |
+
+---
+
+## 8. Running the Application
+
+### Step 1: Seed the Problem Database
+Populate the SQLite database with all 23 initial programming problems:
 ```powershell
+.\.venv\Scripts\Activate.ps1
 python -m database.seed
 ```
 
-### Step 5: Start the Backend and Frontend
-
-Run the backend and frontend in separate terminals:
-
-**Terminal 1 — Backend (FastAPI)**:
+### Step 2: Start the FastAPI Backend Server
+In your first terminal window:
 ```powershell
 .\.venv\Scripts\Activate.ps1
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn backend.main:app --port 8000
 ```
-- Interactive Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- Interactive ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+- **API Documentation (Swagger UI)**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **API Health Check**: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
 
-**Terminal 2 — Frontend (Streamlit)**:
+### Step 3: Start the Streamlit Frontend Web App
+In a second terminal window:
 ```powershell
 .\.venv\Scripts\Activate.ps1
-python -m streamlit run frontend/app.py --server.address 127.0.0.1 --server.port 8501
+python -m streamlit run frontend/app.py --server.port 8501
 ```
-- Open in browser: [http://127.0.0.1:8501](http://127.0.0.1:8501)
+- **Application URL**: [http://localhost:8501](http://localhost:8501)
 
 ---
 
-## 11. Example API Requests & Responses
+## 9. Automated Testing
 
-### 1. Create a Problem (`POST /problems`)
-```bash
-curl -X POST "http://127.0.0.1:8000/problems" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Two Sum",
-    "slug": "two-sum",
-    "description": "Given an integer array nums and an integer target, return indices of two numbers that add up to target.",
-    "difficulty": "Easy",
-    "constraints": "2 <= nums.length <= 10^4",
-    "tags": ["Array", "Hash Map"],
-    "examples": [
-      {
-        "input": "nums = [2, 7, 11, 15], target = 9",
-        "expected_output": "[0, 1]",
-        "explanation": "2 + 7 == 9"
-      }
-    ]
-  }'
-```
+TraceBack includes a comprehensive, deterministic test suite containing **74 automated unit and integration tests**. All tests run offline using `httpx.MockTransport` and in-memory SQLite fixtures (`sqlite:///:memory:`).
 
-### 2. List Problems (`GET /problems?difficulty=Easy&tag=array`)
-```bash
-curl -X GET "http://127.0.0.1:8000/problems?difficulty=Easy&tag=array"
-```
-**Response (200 OK)**:
-```json
-[
-  {
-    "id": 1,
-    "title": "Two Sum",
-    "slug": "two-sum",
-    "difficulty": "Easy",
-    "tags": ["Array", "Hash Map"],
-    "created_at": "2026-11-05T14:33:55.123456Z",
-    "updated_at": "2026-11-05T14:33:55.123456Z"
-  }
-]
-```
-
-### 3. Retrieve Individual Problem (`GET /problems/1`)
-```bash
-curl -X GET "http://127.0.0.1:8000/problems/1"
-```
-**Response (200 OK)**:
-```json
-{
-  "id": 1,
-  "title": "Two Sum",
-  "slug": "two-sum",
-  "description": "Given an integer array nums and an integer target...",
-  "difficulty": "Easy",
-  "constraints": "2 <= nums.length <= 10^4...",
-  "tags": ["Array", "Hash Map"],
-  "created_at": "2026-11-05T14:33:55.123456Z",
-  "updated_at": "2026-11-05T14:33:55.123456Z",
-  "examples": [
-    {
-      "id": 1,
-      "problem_id": 1,
-      "input": "nums = [2, 7, 11, 15], target = 9",
-      "expected_output": "[0, 1]",
-      "explanation": "Because nums[0] + nums[1] == 2 + 7 == 9, return [0, 1]."
-    }
-  ]
-}
-```
-
----
-
-## 12. Running Tests
-
-Run the complete test suite with pytest:
-
+To execute the test suite:
 ```powershell
-pytest -v
+.\.venv\Scripts\Activate.ps1
+$env:EXECUTION_PROVIDER="mock"
+python -m pytest -q tests
 ```
 
-All 51 tests run deterministically offline:
-- 26 execution and core tests using `httpx.MockTransport`.
-- 16 problem management tests using isolated in-memory SQLite (`sqlite:///:memory:`) with `StaticPool`.
-- 9 frontend API client tests verifying query construction, error handling, and stats calculation.
+### Test Coverage Highlights
+- **Backend Execution API**: Validation limits, byte bounds, execution responses, and submission judging.
+- **Provider Architecture**: Confirms `MockProvider` never invokes `exec()`, `eval()`, or local subprocesses.
+- **Problem API**: CRUD operations, difficulty filters, tag search, title search, pagination, and seed idempotency.
+- **AI Debug API**: Request validation, schema parsing, unconfigured state handling, and fallback simulation.
+- **Frontend Workspace**: Monaco editor configuration, blank-by-default initial state, session state caching, and template migrations.
 
 ---
 
-## 13. Current Development Status
+## 10. AI Assistant Configuration (Google Gemini)
 
-- **Milestone 1 — Project Foundation**: Completed.
-- **Milestone 2 — Execution Architecture**: Completed.
-  - Pluggable provider architecture with `BaseExecutionProvider` and `ProviderFactory`.
-  - Non-executing `MockProvider` with deterministic simulation flags (`is_simulated=True`).
-  - `OnlineCompilerProvider` integration with official REST API endpoints.
-  - Endpoints `POST /execute/run` and `POST /execute/check-custom-tests` active and verified.
-  - Strict payload validation (UTF-8 byte length, NUL-character rejection, test count limits).
-- **Milestone 3 — Problem Management System**: Completed.
-  - SQLite database integration with SQLAlchemy 2.x declarative models.
-  - `Problem` and `ProblemExample` entities with 1-to-many relationship.
-  - Endpoints `POST /problems`, `GET /problems`, `GET /problems/{id}`, `GET /problems/slug/{slug}`.
-  - Pagination (`skip`, `limit`), filtering by difficulty, filtering by tag, title search.
-  - Idempotent seeding mechanism with 3 initial DSA problems (Two Sum, Reverse String, Valid Parentheses).
-- **Milestone 4 — Frontend Foundation & UI Development**: Completed.
-  - Built full Streamlit frontend with bespoke dark coding-platform theme (`#080B12`, `#0D111B`, `#131A27`, `#8B5CF6`).
-  - Brand identity with modern `</TraceBack>` typography and tagline.
-  - Dashboard with live backend statistics, problem recommendations, and recent activity empty state.
-  - Problem Library with live title search, difficulty filters, and topic tag filters.
-  - Problem Detail view with formatted description, constraints checklist, and sample test cases.
-  - Robust `BackendAPIClient` with error resilience, live health indicator, and retry messaging.
-  - 51/51 automated unit and integration tests passing.
+TraceBack integrates with Google's state-of-the-art Gemini generative models to act as an on-demand Socratic programming mentor.
+
+### How to Obtain a Free Gemini API Key
+1. Visit [Google AI Studio](https://aistudio.google.com/).
+2. Sign in with your Google account.
+3. Click **Get API key** and create a new key.
+4. Copy your API key into your local `.env` file:
+   ```ini
+   GEMINI_API_KEY=AIzaSyYourActualKeyHere
+   GEMINI_MODEL=gemini-3.8-flash
+   ```
+
+### Security & Privacy Mandates
+- **Zero Secret Exposure**: The frontend never communicates directly with Google Gemini. All calls route through the authenticated FastAPI backend.
+- **Never Committed**: `.env` is permanently excluded via `.gitignore`.
+- **Offline & Unconfigured Grace**: If no key is set, the AI tab provides clear configuration guidance without throwing exceptions or disabling the coding editor.
+
+---
+
+## 11. REST API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | API status and root greeting. |
+| `GET` | `/health` | Healthcheck returning database and system status. |
+| `GET` | `/problems` | List paginated problems with `difficulty`, `tag`, and `search` filters. |
+| `GET` | `/problems/{id}` | Retrieve individual problem details with examples and constraints. |
+| `GET` | `/problems/slug/{slug}` | Retrieve problem details by unique slug identifier. |
+| `POST` | `/execute/run` | Execute Python code with custom stdin; returns stdout, stderr, execution time. |
+| `POST` | `/execute/submit` | Evaluate code against all problem test cases; returns judge verdicts. |
+| `POST` | `/execute/check-custom-tests` | Run code against custom test pairs in Custom Test Lab. |
+| `POST` | `/ai/debug` | Request AI failure analysis and debugging guidance across 5 modes. |
+
+---
+
+## 12. License
+
+This project is released under the MIT License.
+
+---
+
+## 13. Author
+
+**Ashish Kumar Rath**  
+- GitHub: [@Ashish-Ku-Rath](https://github.com/Ashish-Ku-Rath)

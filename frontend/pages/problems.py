@@ -13,7 +13,7 @@ from frontend.components.problem_card import (
     get_tags_html,
 )
 
-AVAILABLE_TAGS = ["All", "Array", "Hash Map", "String", "Stack", "Two Pointers"]
+AVAILABLE_TAGS = ["All", "Array", "Basic Programming", "Hash Map", "Math", "Stack", "String", "Two Pointers"]
 DIFFICULTY_OPTIONS = ["All", "Easy", "Medium", "Hard"]
 
 

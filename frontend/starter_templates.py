@@ -1,93 +1,35 @@
 """
 Starter code templates and sample inputs for TraceBack coding workspace.
-All templates follow Complete Program Mode (Codeforces / CodeChef style)
-where solutions read from stdin and write to stdout.
+All problems now open with a completely blank editor by default.
 """
 
 from typing import Any, Dict
 
-# Pre-configured Complete Program templates tailored to each problem
-STARTER_TEMPLATES: Dict[int, str] = {
-    1: """# Complete Program Mode (stdin -> stdout)
-# Problem 1: Two Sum
-# Input format:
-#   Line 1: n (number of elements)
-#   Line 2: space-separated integers (nums)
-#   Line 3: target integer
-# Output format:
-#   Indices of the two numbers separated by space (e.g. 0 1)
+# Blank starter template for all problems
+DEFAULT_TEMPLATE = ""
 
-import sys
+# Pre-configured templates map (empty to ensure completely blank editor)
+STARTER_TEMPLATES: Dict[int, str] = {}
 
-def solve():
-    lines = sys.stdin.read().split()
-    if not lines:
-        return
-    n = int(lines[0])
-    nums = [int(x) for x in lines[1:n+1]]
-    target = int(lines[n+1])
-    
-    # Write your solution below
-    pass
+# Legacy starter templates kept strictly to identify and migrate legacy session states
+_LEGACY_SNIPPETS = [
+    "# Problem 1: Two Sum",
+    "# Problem 2: Reverse String",
+    "# Problem 3: Valid Parentheses",
+    "# Complete Program Mode (stdin -> stdout)\n# Read input from standard input",
+]
 
-if __name__ == "__main__":
-    solve()
-""",
-    2: """# Complete Program Mode (stdin -> stdout)
-# Problem 2: Reverse String
-# Input format:
-#   Line 1: string s to reverse
-# Output format:
-#   Reversed string
 
-import sys
+def is_legacy_template(code: str) -> bool:
+    """Return True if code is an automatically generated legacy starter template."""
+    if not code or not isinstance(code, str):
+        return False
+    trimmed = code.strip()
+    for snippet in _LEGACY_SNIPPETS:
+        if snippet in trimmed:
+            return True
+    return False
 
-def solve():
-    s = sys.stdin.readline().rstrip("\\r\\n")
-    if not s:
-        return
-        
-    # Write your solution below
-    pass
-
-if __name__ == "__main__":
-    solve()
-""",
-    3: """# Complete Program Mode (stdin -> stdout)
-# Problem 3: Valid Parentheses
-# Input format:
-#   Line 1: string s containing brackets '(', ')', '{', '}', '[', ']'
-# Output format:
-#   true or false
-
-import sys
-
-def solve():
-    s = sys.stdin.readline().rstrip("\\r\\n")
-    if not s:
-        return
-        
-    # Write your solution below
-    pass
-
-if __name__ == "__main__":
-    solve()
-""",
-}
-
-DEFAULT_TEMPLATE = """# Complete Program Mode (stdin -> stdout)
-# Read input from standard input (sys.stdin or input())
-# Print solution output to standard output (print() or sys.stdout)
-
-import sys
-
-def solve():
-    # Read input from stdin
-    pass
-
-if __name__ == "__main__":
-    solve()
-"""
 
 # Default sample stdin for testing in the Testcase tab
 SAMPLE_INPUTS: Dict[int, str] = {
@@ -98,8 +40,11 @@ SAMPLE_INPUTS: Dict[int, str] = {
 
 
 def get_starter_template(problem_id: int) -> str:
-    """Return the Complete Program starter template for the given problem ID."""
-    return STARTER_TEMPLATES.get(problem_id, DEFAULT_TEMPLATE)
+    """
+    Return the starter template for the given problem ID.
+    Always returns empty string so that the editor opens completely blank.
+    """
+    return ""
 
 
 def get_sample_input(problem: Dict[str, Any]) -> str:
@@ -116,4 +61,3 @@ def get_sample_input(problem: Dict[str, Any]) -> str:
         return str(examples[0].get("input", ""))
 
     return ""
-

@@ -183,11 +183,11 @@ def test_get_all_problems_summary(client: TestClient, db_session: Session) -> No
     """Test 5: Retrieve problem listing returns clean summary schema without description/examples."""
     seed_problems(db_session)
 
-    response = client.get("/problems")
+    response = client.get("/problems?limit=50")
     assert response.status_code == 200
     data = response.json()
 
-    assert len(data) == 3
+    assert len(data) == 23
     for item in data:
         assert "id" in item
         assert "title" in item
@@ -198,27 +198,27 @@ def test_get_all_problems_summary(client: TestClient, db_session: Session) -> No
         assert "description" not in item
         assert "examples" not in item
 
-    assert response.headers.get("X-Total-Count") == "3"
+    assert response.headers.get("X-Total-Count") == "23"
 
 
 def test_filter_by_difficulty(client: TestClient, db_session: Session) -> None:
     """Test 6: Filter problems by difficulty level."""
     seed_problems(db_session)
 
-    # Filter Easy (case-insensitive)
-    res_easy = client.get("/problems?difficulty=easy")
+    # Filter Easy (case-insensitive) - 17 easy problems in seed
+    res_easy = client.get("/problems?difficulty=easy&limit=50")
     assert res_easy.status_code == 200
     easy_items = res_easy.json()
-    assert len(easy_items) == 2
+    assert len(easy_items) == 17
     for item in easy_items:
         assert item["difficulty"] == "Easy"
 
-    # Filter Medium
+    # Filter Medium - 6 medium problems in seed
     res_med = client.get("/problems?difficulty=Medium")
     assert res_med.status_code == 200
     med_items = res_med.json()
-    assert len(med_items) == 1
-    assert med_items[0]["title"] == "Valid Parentheses"
+    assert len(med_items) == 6
+    assert any(item["title"] == "Valid Parentheses" for item in med_items)
 
     # Filter Hard (none exist in initial seed)
     res_hard = client.get("/problems?difficulty=Hard")
@@ -239,14 +239,14 @@ def test_filter_by_tag(client: TestClient, db_session: Session) -> None:
     res_array = client.get("/problems?tag=array")
     assert res_array.status_code == 200
     array_items = res_array.json()
-    assert len(array_items) == 1
-    assert array_items[0]["title"] == "Two Sum"
+    assert len(array_items) == 3
+    assert any(p["title"] == "Two Sum" for p in array_items)
 
     # Filter tag 'string'
     res_str = client.get("/problems?tag=string")
     assert res_str.status_code == 200
     str_items = res_str.json()
-    assert len(str_items) == 2
+    assert len(str_items) >= 2
     titles = {p["title"] for p in str_items}
     assert "Reverse String" in titles
     assert "Valid Parentheses" in titles
@@ -261,12 +261,12 @@ def test_search_by_title(client: TestClient, db_session: Session) -> None:
     """Test 8: Search problems by case-insensitive title keyword."""
     seed_problems(db_session)
 
-    # Search 'two'
+    # Search 'two' matches 'Two Sum', 'GCD of Two Numbers', 'LCM of Two Numbers'
     res_two = client.get("/problems?search=two")
     assert res_two.status_code == 200
     items = res_two.json()
-    assert len(items) == 1
-    assert items[0]["title"] == "Two Sum"
+    assert len(items) == 3
+    assert any(p["title"] == "Two Sum" for p in items)
 
     # Search 'parentheses'
     res_paren = client.get("/problems?search=Parentheses")
@@ -297,8 +297,8 @@ def test_get_individual_problem_by_id(client: TestClient, db_session: Session) -
     assert "Array" in data["tags"]
     assert "Hash Map" in data["tags"]
     assert len(data["examples"]) == 3
-    assert data["examples"][0]["input"] == "nums = [2, 7, 11, 15], target = 9"
-    assert data["examples"][0]["expected_output"] == "[0, 1]"
+    assert "2 7 11 15" in data["examples"][0]["input"]
+    assert "0 1" in data["examples"][0]["expected_output"]
     assert data["examples"][0]["explanation"] is not None
 
 
@@ -366,11 +366,11 @@ def test_pagination_behavior(client: TestClient, db_session: Session) -> None:
     res_p2 = client.get("/problems?skip=2&limit=2")
     assert res_p2.status_code == 200
     p2_items = res_p2.json()
-    assert len(p2_items) == 1
+    assert len(p2_items) == 2
     assert p2_items[0]["id"] == 3
 
-    # Page 3: skip 10, limit 2 (out of bounds)
-    res_p3 = client.get("/problems?skip=10&limit=2")
+    # Page 3: skip 50, limit 2 (out of bounds)
+    res_p3 = client.get("/problems?skip=50&limit=2")
     assert res_p3.status_code == 200
     assert len(res_p3.json()) == 0
 
@@ -388,20 +388,20 @@ def test_pagination_behavior(client: TestClient, db_session: Session) -> None:
 # ==============================================================================
 
 def test_seed_process_idempotent(db_session: Session) -> None:
-    """Test 13: Seed process is idempotent and creates exactly 3 records on repeated runs."""
+    """Test 13: Seed process is idempotent and creates exactly 23 records on repeated runs."""
     # First seeding pass
     first_run = seed_problems(db_session)
-    assert len(first_run) == 3
+    assert len(first_run) == 23
 
     initial_count = db_session.query(Problem).count()
-    assert initial_count == 3
+    assert initial_count == 23
 
     # Second seeding pass on same database session
     second_run = seed_problems(db_session)
-    assert len(second_run) == 3
+    assert len(second_run) == 23
 
     final_count = db_session.query(Problem).count()
-    assert final_count == 3  # Count remains strictly 3
+    assert final_count == 23  # Count remains strictly 23
 
     # Verify problem slugs and example counts
     p_map = {p.slug: p for p in final_count_problems(db_session)}

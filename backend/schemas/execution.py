@@ -242,3 +242,54 @@ class CustomTestCheckResponse(BaseModel):
     memory_kb: Optional[int] = Field(default=None, description="Peak memory used in kilobytes")
     provider: str = Field(..., description="Identifier of the execution provider")
     is_simulated: bool = Field(..., description="Whether this execution was simulated")
+
+
+class SubmitCodeRequest(BaseModel):
+    """Request payload for submitting code against predefined problem test cases."""
+    problem_id: int = Field(..., description="Target problem ID to judge against")
+    source_code: str = Field(..., description="Source code to execute remotely")
+    language: str = Field(default="python", description="Programming language identifier")
+    time_limit: int = Field(
+        default=settings.ONLINECOMPILER_DEFAULT_TIME_LIMIT,
+        ge=settings.MIN_TIME_LIMIT,
+        le=settings.MAX_TIME_LIMIT,
+        description="Execution time limit in seconds",
+    )
+
+    @field_validator("source_code")
+    @classmethod
+    def validate_source_code(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Source code cannot be empty.")
+        if "\x00" in v:
+            raise ValueError("Source code must not contain NUL (\\x00) characters.")
+        encoded_bytes = len(v.encode("utf-8"))
+        if encoded_bytes > settings.MAX_SOURCE_CODE_BYTES:
+            raise ValueError(
+                f"Source code exceeds maximum allowed size of {settings.MAX_SOURCE_CODE_BYTES} bytes."
+            )
+        return v
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, v: str) -> str:
+        normalized = v.strip().lower()
+        if normalized != ExecutionLanguage.PYTHON.value:
+            raise ValueError(
+                f"Unsupported language '{v}'. Only '{ExecutionLanguage.PYTHON.value}' is supported in this milestone."
+            )
+        return normalized
+
+
+class SubmitCodeResponse(BaseModel):
+    """Normalized response schema for official problem submission evaluation."""
+    problem_id: int = Field(..., description="Target problem ID evaluated")
+    verdict: str = Field(..., description="Overall evaluation verdict (accepted, wrong_answer, runtime_error)")
+    total_tests: int = Field(..., description="Total number of evaluated test cases")
+    passed_tests: int = Field(..., description="Number of passed test cases")
+    failed_tests: int = Field(..., description="Number of failed test cases")
+    tests: List[TestCaseResult] = Field(..., description="Detailed per-test outcomes")
+    execution_time: Optional[float] = Field(default=None, description="Peak execution time in seconds")
+    memory_kb: Optional[int] = Field(default=None, description="Peak memory used in kilobytes")
+    provider: str = Field(..., description="Identifier of the execution provider")
+    is_simulated: bool = Field(..., description="Whether this execution was simulated")

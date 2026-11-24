@@ -6,6 +6,7 @@ FastAPI application for TraceBack: The Intelligent Coding & Debugging Assistant.
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from backend.core.config import settings
+from backend.routes.ai_debug import router as ai_debug_router
 from backend.routes.execution import router as execution_router
 from backend.routes.problems import router as problems_router
 from backend.schemas.system import HealthResponse, RootResponse
@@ -32,6 +33,7 @@ app = FastAPI(
 # Mount API routers
 app.include_router(execution_router, prefix="/execute", tags=["Execution"])
 app.include_router(problems_router)
+app.include_router(ai_debug_router)
 
 
 

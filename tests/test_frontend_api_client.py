@@ -233,3 +233,50 @@ def test_statistics_calculation():
     assert stats["easy"] == 2
     assert stats["medium"] == 1
     assert stats["hard"] == 0
+
+
+def test_submit_solution_client():
+    """Test 10: Verify BackendAPIClient.submit_solution."""
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/execute/submit"
+        data = json.loads(request.content)
+        assert data["problem_id"] == 1
+        return httpx.Response(
+            status_code=200,
+            json={
+                "problem_id": 1,
+                "verdict": "accepted",
+                "total_tests": 3,
+                "passed_tests": 3,
+                "failed_tests": 0,
+                "tests": [],
+                "is_simulated": True,
+            },
+        )
+
+    client = BackendAPIClient(transport=httpx.MockTransport(handler))
+    res, err = client.submit_solution(problem_id=1, source_code="print('0 1')")
+    assert err is None
+    assert res["verdict"] == "accepted"
+
+
+def test_ai_debug_client():
+    """Test 11: Verify BackendAPIClient.request_ai_debug."""
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/ai/debug"
+        return httpx.Response(
+            status_code=200,
+            json={
+                "explanation": "Off by one error",
+                "likely_cause": "Index exceeds bounds",
+                "responsible_code_lines": "Line 3",
+                "suggested_fix": "Change < to <=",
+                "provider": "simulated",
+            },
+        )
+
+    client = BackendAPIClient(transport=httpx.MockTransport(handler))
+    res, err = client.request_ai_debug(source_code="print(1)", stderr="IndexError")
+    assert err is None
+    assert "Off by one error" in res["explanation"]
+

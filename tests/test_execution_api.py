@@ -162,3 +162,36 @@ def test_invalid_execution_time_rejection() -> None:
         json={"source_code": "print(1)", "time_limit": 35},
     )
     assert res3.status_code == 422
+
+
+def test_post_execute_submit_success() -> None:
+    """Test 25: POST /execute/submit succeeds against seeded problem test cases."""
+    from database.connection import get_db
+    from database.seed import seed_problems
+    db = next(get_db())
+    seed_problems(db)
+
+    payload = {
+        "problem_id": 1,
+        "source_code": "import sys\n# Two Sum solution\nprint('0 1')",
+        "language": "python",
+    }
+    response = client.post("/execute/submit", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["problem_id"] == 1
+    assert "verdict" in data
+    assert data["total_tests"] >= 1
+    assert data["is_simulated"] is True
+
+
+def test_post_execute_submit_problem_not_found() -> None:
+    """Test 26: POST /execute/submit with invalid problem ID returns 404."""
+    payload = {
+        "problem_id": 99999,
+        "source_code": "print('hello')",
+        "language": "python",
+    }
+    response = client.post("/execute/submit", json=payload)
+    assert response.status_code == 404
+

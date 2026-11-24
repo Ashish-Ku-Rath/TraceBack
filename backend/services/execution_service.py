@@ -5,11 +5,17 @@ Orchestrates code execution workflows and decouples routing from specific provid
 
 from typing import Optional
 import httpx
+from sqlalchemy.orm import Session
+from backend.core.exceptions import ConfigurationError, ProblemNotFoundError
+from backend.models.problem import Problem, ProblemExample
 from backend.schemas.execution import (
     CustomTestCheckRequest,
     CustomTestCheckResponse,
     RunCodeRequest,
     RunCodeResponse,
+    SubmitCodeRequest,
+    SubmitCodeResponse,
+    TestCaseInput,
 )
 from backend.services.providers.base_provider import BaseExecutionProvider
 from backend.services.providers.provider_factory import ProviderFactory
@@ -40,14 +46,54 @@ class ExecutionService:
         return await self.provider.run_tests(request)
 
     async def submit_problem(
-        self, problem_id: str, source_code: str, language: str = "python"
-    ) -> None:
+        self, request: SubmitCodeRequest, db: Session
+    ) -> SubmitCodeResponse:
         """
-        Reserved for Milestone 3+ official problem submission.
-        Official hidden test cases will be fetched internally from the database
-        and never accepted or exposed via frontend endpoints.
+        Evaluate code against official predefined test cases from the database.
+        Never executes user code on the local host.
         """
-        raise NotImplementedError(
-            "Official problem submission workflow requires problem database integration (Milestone 3+)."
+        problem = db.query(Problem).filter(Problem.id == request.problem_id).first()
+        if not problem:
+            raise ProblemNotFoundError(f"Problem #{request.problem_id} does not exist.")
+
+        examples = (
+            db.query(ProblemExample)
+            .filter(ProblemExample.problem_id == problem.id)
+            .order_by(ProblemExample.id)
+            .all()
+        )
+        if not examples:
+            raise ConfigurationError(
+                f"No test cases configured in database for problem #{request.problem_id}."
+            )
+
+        test_inputs = [
+            TestCaseInput(
+                input=ex.input,
+                expected_output=ex.expected_output,
+            )
+            for ex in examples
+        ]
+
+        custom_req = CustomTestCheckRequest(
+            source_code=request.source_code,
+            language=request.language,
+            time_limit=request.time_limit,
+            checker="trim",
+            tests=test_inputs,
         )
 
+        test_check_resp = await self.provider.run_tests(custom_req)
+
+        return SubmitCodeResponse(
+            problem_id=request.problem_id,
+            verdict=test_check_resp.verdict,
+            total_tests=test_check_resp.total_tests,
+            passed_tests=test_check_resp.passed_tests,
+            failed_tests=test_check_resp.failed_tests,
+            tests=test_check_resp.tests,
+            execution_time=test_check_resp.execution_time,
+            memory_kb=test_check_resp.memory_kb,
+            provider=test_check_resp.provider,
+            is_simulated=test_check_resp.is_simulated,
+        )

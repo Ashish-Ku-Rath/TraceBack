@@ -61,7 +61,20 @@ class Settings:
     HTTP_TIMEOUT_BUFFER_SECONDS: float = 5.0
 
     # Future integration settings (Milestone 3+)
-    GEMINI_API_KEY: str | None = os.getenv("GEMINI_API_KEY")
+        # Google Gemini AI configuration
+    GEMINI_API_KEY: str | None = (
+        (os.getenv("GEMINI_API_KEY") or "").strip() or None
+    )
+
+    GEMINI_MODEL: str = os.getenv(
+        "GEMINI_MODEL", "gemini-3.8-flash"
+    ).strip()
+
+    GEMINI_TIMEOUT_SECONDS: float = float(
+        os.getenv("GEMINI_TIMEOUT_SECONDS", "30")
+    )
+
+    # Judge0 configuration (future use)
     JUDGE0_API_URL: str | None = os.getenv("JUDGE0_API_URL")
     JUDGE0_API_KEY: str | None = os.getenv("JUDGE0_API_KEY")
 

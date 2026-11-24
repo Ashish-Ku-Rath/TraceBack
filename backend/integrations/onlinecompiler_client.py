@@ -30,7 +30,9 @@ class OnlineCompilerClient:
         base_url: Optional[str] = None,
         http_client: Optional[httpx.AsyncClient] = None,
     ) -> None:
-        self.api_key = api_key or settings.ONLINECOMPILER_API_KEY
+        self.api_key = (
+            api_key if api_key is not None else settings.ONLINECOMPILER_API_KEY
+        )
         if not self.api_key or not self.api_key.strip():
             raise ConfigurationError(
                 "OnlineCompiler API key is missing. Set ONLINECOMPILER_API_KEY in environment or use mock provider."
