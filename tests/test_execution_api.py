@@ -4,9 +4,17 @@ Tests validation rules, size limits, error codes, and successful requests using 
 """
 
 from fastapi.testclient import TestClient
+import pytest
+from backend.core.config import settings
 from backend.main import app
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def force_mock_provider(monkeypatch) -> None:
+    """Ensure execution provider defaults to mock for all execution API tests."""
+    monkeypatch.setattr(settings, "EXECUTION_PROVIDER", "mock")
 
 
 def test_post_execute_run_success() -> None:

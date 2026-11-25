@@ -10,6 +10,7 @@ from frontend.config import LOGO_HTML, TAGLINE
 NAV_ITEMS = [
     ("Dashboard", "dashboard", "📊"),
     ("Problems", "problems", "🧩"),
+    ("Workspace", "workspace", "💻"),
 ]
 
 
@@ -33,7 +34,13 @@ def render_sidebar() -> str:
 
         # Render navigation options
         for label, page_key, icon in NAV_ITEMS:
-            is_active = (current_page == page_key) or (current_page in ("problem_detail", "workspace") and page_key == "problems")
+            if page_key == "problems":
+                is_active = current_page in ("problems", "problem_detail")
+            elif page_key == "workspace":
+                is_active = current_page == "workspace"
+            else:
+                is_active = current_page == page_key
+
             btn_label = f"{icon}  {label}"
 
             if is_active:
@@ -51,7 +58,9 @@ def render_sidebar() -> str:
                     use_container_width=True,
                 ):
                     st.session_state["current_page"] = page_key
-                    if page_key != "problems":
+                    if page_key == "workspace" and not st.session_state.get("selected_problem_id"):
+                        st.session_state["selected_problem_id"] = 1
+                    elif page_key == "dashboard":
                         st.session_state["selected_problem_id"] = None
                     st.rerun()
 
